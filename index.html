@@ -25,17 +25,24 @@
       background-color: #d0d0d0 !important;
     }
 
-    button {
-      padding: 8px 14px;
-      margin-right: 10px;
+    /* Icon-only buttons */
+    .top-btn {
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      border-radius: 10px;
       opacity: 0.4;
       pointer-events: none;
       display: inline-flex;
+      justify-content: center;
       align-items: center;
-      gap: 6px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      background: white;
+      cursor: pointer;
     }
 
-    button.enabled {
+    .top-btn.enabled {
       opacity: 1;
       pointer-events: auto;
     }
@@ -55,7 +62,7 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-top: 80px;
+      margin-top: 140px; /* moved further down */
     }
 
     .keypad-row {
@@ -73,8 +80,6 @@
       font-size: 20px;
       color: black;
       cursor: pointer;
-      opacity: 1;
-      pointer-events: auto;
 
       display: flex;
       justify-content: center;
@@ -90,14 +95,18 @@
 <body onload="loadSheet()">
 
   <div>
-    <h2>sheet manager</h2>
 
-    <button id="loadBtn">
-      <i class="bi bi-arrow-clockwise"></i> Load
+    <!-- ICON BUTTONS -->
+    <button id="loadBtn" class="top-btn">
+      <i class="bi bi-arrow-clockwise"></i>
     </button>
 
-    <button id="saveBtn">
-      <i class="bi bi-save"></i> Save
+    <button id="saveBtn" class="top-btn">
+      <i class="bi bi-save"></i>
+    </button>
+
+    <button id="toggleKeypadBtn" class="top-btn" style="display:none;">
+      <i class="bi bi-keyboard"></i>
     </button>
 
     <div id="messages"></div>
@@ -134,10 +143,15 @@
 
     let selectedCell = null;
     let originalValue = "";
+    let keypadEnabled = true;
 
     function enableButtons() {
       document.getElementById("loadBtn").classList.add("enabled");
       document.getElementById("saveBtn").classList.add("enabled");
+
+      const toggle = document.getElementById("toggleKeypadBtn");
+      toggle.style.display = "inline-flex";
+      toggle.classList.add("enabled");
     }
 
     function logMessage(msg) {
@@ -174,7 +188,9 @@
           } else if (isComputedE) {
             const b = Number(row[1]);
             const d = Number(row[3]);
-            td.textContent = b - d;
+            const val = b - d;
+            td.textContent = val;
+            if (val < 0) td.style.background = "#cc4125";
           } else {
             td.textContent = cell;
             td.classList.add("editable");
@@ -200,12 +216,15 @@
     function updateAllE() {
       const table = document.getElementById("sheet");
       for (let r = 1; r < table.rows.length; r++) {
-        table.rows[r].cells[4].textContent = computeE(r);
+        const val = computeE(r);
+        const cell = table.rows[r].cells[4];
+        cell.textContent = val;
+        cell.style.background = val < 0 ? "#cc4125" : "";
       }
     }
 
     function selectCell(td) {
-      finalizeCell(); // finalize previous cell if needed
+      finalizeCell();
 
       selectedCell = td;
       originalValue = td.textContent;
@@ -230,7 +249,7 @@
     }
 
     function pressKey(key) {
-      if (!selectedCell) return;
+      if (!selectedCell || !keypadEnabled) return;
 
       if (key === "del") {
         selectedCell.textContent = selectedCell.textContent.slice(0, -1);
@@ -290,9 +309,15 @@
       finalizeCell();
     });
 
-    /* Enable load/save click after binding */
+    /* Load/save button actions */
     document.getElementById("loadBtn").addEventListener("click", loadSheet);
     document.getElementById("saveBtn").addEventListener("click", saveSheet);
+
+    /* Keypad toggle */
+    document.getElementById("toggleKeypadBtn").addEventListener("click", () => {
+      keypadEnabled = !keypadEnabled;
+      document.getElementById("keypad").style.display = keypadEnabled ? "flex" : "none";
+    });
   </script>
 
 </body>
