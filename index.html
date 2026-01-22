@@ -44,7 +44,7 @@
   <table id="sheetTable"></table>
 
   <script>
-    const API_URL = "https://script.google.com/a/macros/s/AKfycbxlJFQbLvtzRqd1ZYIG2n-d98gKyRPDwt-Vf2vMq11mrPRprnUYL3x72Se2Kqtm6ZTbPQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxlJFQbLvtzRqd1ZYIG2n-d98gKyRPDwt-Vf2vMq11mrPRprnUYL3x72Se2Kqtm6ZTbPQ/exec";
 
     const table = document.getElementById("sheetTable");
     const readBtn = document.getElementById("readBtn");
@@ -55,12 +55,10 @@
       console.log("Fetching:", API_URL);
 
       fetch(API_URL)
-        .then(r => {
-          console.log("Response received:", r);
-          return r.text();
-        })
+        .then(r => r.text())
         .then(text => {
-          console.log("Raw response text:", text);
+          console.log("Raw response:", text);
+
           let data;
           try {
             data = JSON.parse(text);
@@ -113,12 +111,9 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(rows)
       })
-      .then(r => {
-        console.log("Write response:", r);
-        return r.text();
-      })
+      .then(r => r.text())
       .then(msg => {
-        console.log("Write result text:", msg);
+        console.log("Write result:", msg);
         alert("Sheet updated: " + msg);
       })
       .catch(err => {
