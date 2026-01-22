@@ -59,10 +59,10 @@
       background: #f2f2f2;
       padding: 20px;
       border-radius: 12px;
-      display: flex;
+      display: none; /* HIDDEN UNTIL TABLE LOADS */
       flex-direction: column;
       gap: 12px;
-      margin-top: 140px; /* moved further down */
+      margin-top: 140px;
     }
 
     .keypad-row {
@@ -105,7 +105,7 @@
       <i class="bi bi-save"></i>
     </button>
 
-    <button id="toggleKeypadBtn" class="top-btn" style="display:none;">
+    <button id="toggleKeypadBtn" class="top-btn">
       <i class="bi bi-keyboard"></i>
     </button>
 
@@ -145,13 +145,16 @@
     let originalValue = "";
     let keypadEnabled = true;
 
+    /* Disable keypad toggle until table loads */
+    const toggleBtn = document.getElementById("toggleKeypadBtn");
+    toggleBtn.classList.remove("enabled");
+
     function enableButtons() {
       document.getElementById("loadBtn").classList.add("enabled");
       document.getElementById("saveBtn").classList.add("enabled");
 
-      const toggle = document.getElementById("toggleKeypadBtn");
-      toggle.style.display = "inline-flex";
-      toggle.classList.add("enabled");
+      toggleBtn.classList.add("enabled"); // enable keypad toggle
+      document.getElementById("keypad").style.display = "flex"; // show keypad after load
     }
 
     function logMessage(msg) {
@@ -314,7 +317,7 @@
     document.getElementById("saveBtn").addEventListener("click", saveSheet);
 
     /* Keypad toggle */
-    document.getElementById("toggleKeypadBtn").addEventListener("click", () => {
+    toggleBtn.addEventListener("click", () => {
       keypadEnabled = !keypadEnabled;
       document.getElementById("keypad").style.display = keypadEnabled ? "flex" : "none";
     });
