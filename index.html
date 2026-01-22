@@ -4,123 +4,64 @@
   <meta charset="UTF-8">
   <title>sheet manager</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    table {
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    td, th {
-      border: 1px solid #444;
-      padding: 6px 10px;
-      min-width: 80px;
-    }
-    td {
-      background: #fafafa;
-    }
-    input[type="text"] {
-      width: 100%;
-      border: none;
-      background: transparent;
-      font-size: 14px;
-    }
-    button {
-      padding: 10px 16px;
-      margin-right: 10px;
-      font-size: 14px;
-      cursor: pointer;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; margin-top: 20px; }
+    td, th { border: 1px solid #ccc; padding: 6px 10px; }
+    button { margin-top: 20px; padding: 8px 14px; }
   </style>
 </head>
-<body>
 
+<body>
   <h2>sheet manager</h2>
 
-  <button id="readBtn">Read Range</button>
-  <button id="writeBtn">Write Range</button>
+  <button onclick="loadSheet()">Load Sheet</button>
+  <button onclick="saveSheet()">Save Sheet</button>
 
-  <table id="sheetTable"></table>
+  <table id="sheet"></table>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxlJFQbLvtzRqd1ZYIG2n-d98gKyRPDwt-Vf2vMq11mrPRprnUYL3x72Se2Kqtm6ZTbPQ/exec";
+    const URL = "https://script.google.com/macros/s/AKfycbxlJFQbLvtzRqd1ZYIG2n-d98gKyRPDwt-Vf2vMq11mrPRprnUYL3x72Se2Kqtm6ZTbPQ/exec";
 
-    const table = document.getElementById("sheetTable");
-    const readBtn = document.getElementById("readBtn");
-    const writeBtn = document.getElementById("writeBtn");
+    async function loadSheet() {
+      const res = await fetch(URL);
+      const data = await res.json();
+      renderTable(data);
+    }
 
-    readBtn.onclick = () => {
-      console.log("Read button clicked");
-      console.log("Fetching:", API_URL);
-
-      fetch(API_URL)
-        .then(r => r.text())
-        .then(text => {
-          console.log("Raw response:", text);
-
-          let data;
-          try {
-            data = JSON.parse(text);
-          } catch (err) {
-            console.error("JSON parse error:", err);
-            return;
-          }
-
-          console.log("Parsed JSON:", data);
-
-          table.innerHTML = "";
-          data.forEach(row => {
-            const tr = document.createElement("tr");
-            row.forEach(cell => {
-              const td = document.createElement("td");
-              const input = document.createElement("input");
-              input.type = "text";
-              input.value = cell;
-              td.appendChild(input);
-              tr.appendChild(td);
-            });
-            table.appendChild(tr);
-          });
-
-          console.log("Table populated");
-        })
-        .catch(err => {
-          console.error("Fetch error:", err);
+    function renderTable(data) {
+      const table = document.getElementById("sheet");
+      table.innerHTML = "";
+      data.forEach((row, r) => {
+        const tr = document.createElement("tr");
+        row.forEach((cell, c) => {
+          const td = document.createElement("td");
+          const input = document.createElement("input");
+          input.value = cell;
+          input.dataset.r = r;
+          input.dataset.c = c;
+          td.appendChild(input);
+          tr.appendChild(td);
         });
-    };
+        table.appendChild(tr);
+      });
+    }
 
-    writeBtn.onclick = () => {
-      console.log("Write button clicked");
-
+    async function saveSheet() {
+      const inputs = document.querySelectorAll("input");
       const rows = [];
-      const trList = table.querySelectorAll("tr");
 
-      trList.forEach(tr => {
-        const row = [];
-        tr.querySelectorAll("input").forEach(input => {
-          row.push(input.value);
-        });
-        rows.push(row);
+      inputs.forEach(input => {
+        const r = Number(input.dataset.r);
+        const c = Number(input.dataset.c);
+        if (!rows[r]) rows[r] = [];
+        rows[r][c] = input.value;
       });
 
-      console.log("Data to write:", rows);
-
-      fetch(API_URL, {
+      await fetch(URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(rows)
-      })
-      .then(r => r.text())
-      .then(msg => {
-        console.log("Write result:", msg);
-        alert("Sheet updated: " + msg);
-      })
-      .catch(err => {
-        console.error("Write error:", err);
       });
-    };
+    }
   </script>
-
 </body>
 </html>
