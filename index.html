@@ -7,6 +7,19 @@
     body { font-family: Arial, sans-serif; padding: 20px; }
     table { border-collapse: collapse; margin-top: 20px; }
     td, th { border: 1px solid #ccc; padding: 6px 10px; }
+
+    /* Invisible input styling */
+    input {
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      outline: none;
+      width: 100%;
+      font: inherit;
+      padding: 0;
+      margin: 0;
+    }
+
     button { margin-top: 20px; padding: 8px 14px; }
   </style>
 </head>
@@ -20,7 +33,7 @@
   <table id="sheet"></table>
 
   <script>
-    const URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjd_9dIBJsLAQQy14z-ppCin3nk-0abs1sOQwrbGfIrukKabAr5uPVZUrYAgShbszC3Xo7NzQR7P8kMxfNd6L2DsoGx1pzZkpKQ25NbkArgujMhoPSUDyLT3cPljiW_sPsAWDAFB5XqQ297UryoevY-0cEx3ZezT8trhJ04DW5aDArEJaDo46nwWSExhEYgF3LNs1oNe8M7GEmYSw8lVij6foj3GXp4mpKgxRXpJn-b-qZ0ghSPBSEuXIhzk1BjKyT0R-_ytY2OwZ2XS9GNFgxXycO0GwfggQ6IQlao&lib=MmnhR7btKInj58QZjGZ_D-ko5nz9syJhs";
+    const URL = "https://script.google.com/macros/s/AKfycbxlJFQbLvtzRqd1ZYIG2n-d98gKyRPDwt-Vf2vMq11mrPRprnUYL3x72Se2Kqtm6ZTbPQ/exec";
 
     async function loadSheet() {
       const res = await fetch(URL);
@@ -75,8 +88,6 @@
         method: "POST",
         body: JSON.stringify(rows)
       });
-
-      alert("Saved");
     }
   </script>
 </body>
