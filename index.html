@@ -55,9 +55,14 @@
 
           const isHeaderRow = r === 0;
           const isHeaderCol = c === 0;
+          const isComputedE = c === 4 && r !== 0; // column E except row 1
 
           if (isHeaderRow || isHeaderCol) {
             td.textContent = cell;
+          } else if (isComputedE) {
+            const b = Number(row[1]);
+            const d = Number(row[3]);
+            td.textContent = b - d;
           } else {
             const input = document.createElement("input");
             input.value = cell;
@@ -74,14 +79,23 @@
     }
 
     async function saveSheet() {
-      const inputs = document.querySelectorAll("input");
       const rows = [];
+      const table = document.getElementById("sheet");
+      const trs = table.querySelectorAll("tr");
 
-      inputs.forEach(input => {
-        const r = Number(input.dataset.r);
-        const c = Number(input.dataset.c);
-        if (!rows[r]) rows[r] = [];
-        rows[r][c] = input.value;
+      trs.forEach((tr, r) => {
+        const tds = tr.querySelectorAll("td");
+        rows[r] = [];
+
+        tds.forEach((td, c) => {
+          const input = td.querySelector("input");
+
+          if (input) {
+            rows[r][c] = input.value;
+          } else {
+            rows[r][c] = td.textContent;
+          }
+        });
       });
 
       await fetch(URL, {
