@@ -35,6 +35,8 @@
       data.forEach((row, r) => {
         const tr = document.createElement("tr");
 
+        tr.style.backgroundColor = r % 2 === 0 ? "#ffffff" : "#f2f2f2";
+
         row.forEach((cell, c) => {
           const td = document.createElement("td");
 
