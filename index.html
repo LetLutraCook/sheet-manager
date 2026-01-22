@@ -21,6 +21,13 @@
     }
 
     button { margin-top: 20px; padding: 8px 14px; }
+
+    #messages {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #444;
+      white-space: pre-line;
+    }
   </style>
 </head>
 
@@ -30,15 +37,24 @@
   <button onclick="loadSheet()">Load Sheet</button>
   <button onclick="saveSheet()">Save Sheet</button>
 
+  <div id="messages"></div>
+
   <table id="sheet"></table>
 
   <script>
     const URL = "https://script.google.com/macros/s/AKfycbxlJFQbLvtzRqd1ZYIG2n-d98gKyRPDwt-Vf2vMq11mrPRprnUYL3x72Se2Kqtm6ZTbPQ/exec";
 
+    function logMessage(msg) {
+      const box = document.getElementById("messages");
+      const timestamp = new Date().toLocaleTimeString();
+      box.textContent += `${timestamp} — ${msg}\n`;
+    }
+
     async function loadSheet() {
       const res = await fetch(URL);
       const data = await res.json();
       renderTable(data);
+      logMessage("sheet loaded");
     }
 
     function renderTable(data) {
@@ -55,7 +71,7 @@
 
           const isHeaderRow = r === 0;
           const isHeaderCol = c === 0;
-          const isComputedE = c === 4 && r !== 0; // column E except row 1
+          const isComputedE = c === 4 && r !== 0;
 
           if (isHeaderRow || isHeaderCol) {
             td.textContent = cell;
@@ -102,6 +118,8 @@
         method: "POST",
         body: JSON.stringify(rows)
       });
+
+      logMessage("sheet saved");
     }
   </script>
 </body>
