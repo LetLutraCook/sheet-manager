@@ -63,6 +63,7 @@
       gap: 12px;
     }
 
+    /* Keypad buttons */
     #keypad button {
       width: 60px;
       height: 60px;
@@ -74,6 +75,10 @@
       cursor: pointer;
       opacity: 1;
       pointer-events: auto;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     #keypad button:active {
@@ -103,24 +108,28 @@
   <!-- NUMERIC KEYPAD -->
   <div id="keypad">
     <div class="keypad-row">
-      <button onclick="pressKey('1')">1</button>
-      <button onclick="pressKey('2')">2</button>
-      <button onclick="pressKey('3')">3</button>
+      <button ontouchstart="pressKey('1')" onclick="pressKey('1')">1</button>
+      <button ontouchstart="pressKey('2')" onclick="pressKey('2')">2</button>
+      <button ontouchstart="pressKey('3')" onclick="pressKey('3')">3</button>
     </div>
     <div class="keypad-row">
-      <button onclick="pressKey('4')">4</button>
-      <button onclick="pressKey('5')">5</button>
-      <button onclick="pressKey('6')">6</button>
+      <button ontouchstart="pressKey('4')" onclick="pressKey('4')">4</button>
+      <button ontouchstart="pressKey('5')" onclick="pressKey('5')">5</button>
+      <button ontouchstart="pressKey('6')" onclick="pressKey('6')">6</button>
     </div>
     <div class="keypad-row">
-      <button onclick="pressKey('7')">7</button>
-      <button onclick="pressKey('8')">8</button>
-      <button onclick="pressKey('9')">9</button>
+      <button ontouchstart="pressKey('7')" onclick="pressKey('7')">7</button>
+      <button ontouchstart="pressKey('8')" onclick="pressKey('8')">8</button>
+      <button ontouchstart="pressKey('9')" onclick="pressKey('9')">9</button>
     </div>
     <div class="keypad-row">
-      <button onclick="pressKey('0')">0</button>
-      <button onclick="pressKey('del')"><i class="bi bi-backspace"></i></button>
-      <button onclick="pressKey('enter')"><i class="bi bi-check-lg"></i></button>
+      <button ontouchstart="pressKey('0')" onclick="pressKey('0')">0</button>
+      <button ontouchstart="pressKey('del')" onclick="pressKey('del')">
+        <i class="bi bi-backspace"></i>
+      </button>
+      <button ontouchstart="pressKey('enter')" onclick="pressKey('enter')">
+        <i class="bi bi-check-lg"></i>
+      </button>
     </div>
   </div>
 
@@ -167,13 +176,10 @@
           if (isHeaderRow || isHeaderCol) {
             td.textContent = cell;
           } else if (isComputedE) {
-            const b = Number(row[1]);
-            const d = Number(row[3]);
-            td.textContent = b - d;
+            td.textContent = computeE(r);
           } else {
             td.textContent = cell;
             td.classList.add("editable");
-
             td.addEventListener("click", () => selectCell(td));
           }
 
@@ -182,6 +188,21 @@
 
         table.appendChild(tr);
       });
+    }
+
+    function computeE(rowIndex) {
+      const table = document.getElementById("sheet");
+      const row = table.rows[rowIndex];
+      const b = Number(row.cells[1].textContent);
+      const d = Number(row.cells[3].textContent);
+      return b - d;
+    }
+
+    function updateAllE() {
+      const table = document.getElementById("sheet");
+      for (let r = 1; r < table.rows.length; r++) {
+        table.rows[r].cells[4].textContent = computeE(r);
+      }
     }
 
     function selectCell(td) {
@@ -202,19 +223,22 @@
 
       if (key === "del") {
         selectedCell.textContent = selectedCell.textContent.slice(0, -1);
+        updateAllE();
         return;
       }
 
       if (key === "enter") {
         if (selectedCell.textContent.trim() === "") {
-          selectedCell.textContent = originalValue;
+          selectedCell.textContent = "0";
         }
         selectedCell.classList.remove("selected");
         selectedCell = null;
+        updateAllE();
         return;
       }
 
       selectedCell.textContent += key;
+      updateAllE();
     }
 
     async function saveSheet() {
