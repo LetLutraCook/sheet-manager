@@ -15,7 +15,7 @@
     table { border-collapse: collapse; margin-top: 20px; }
     td, th { border: 1px solid #ccc; padding: 6px 10px; }
 
-    /* Editable cell styling (no text boxes) */
+    /* Editable cell styling */
     .editable {
       cursor: pointer;
     }
@@ -25,6 +25,7 @@
       background-color: #d0d0d0 !important;
     }
 
+    /* Disabled buttons */
     button {
       padding: 8px 14px;
       margin-right: 10px;
@@ -46,13 +47,13 @@
 
     /* Keypad container */
     #keypad {
-      background: #555;
+      background: #c0c0c0; /* darker gray like your darker band */
       padding: 20px;
       border-radius: 12px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-top: 60px;
+      margin-top: 80px; /* aligns vertically with table */
     }
 
     /* Keypad rows */
@@ -65,15 +66,18 @@
     #keypad button {
       width: 60px;
       height: 60px;
-      background: #ddd;
+      background: #f2f2f2; /* light banding color */
       border: none;
       border-radius: 10px;
       font-size: 20px;
+      color: black;
       cursor: pointer;
+      opacity: 1;
+      pointer-events: auto;
     }
 
     #keypad button:active {
-      background: #ccc;
+      background: #e0e0e0;
     }
   </style>
 </head>
@@ -163,7 +167,6 @@
           } else {
             td.textContent = cell;
             td.classList.add("editable");
-
             td.addEventListener("click", () => selectCell(td));
           }
 
