@@ -135,7 +135,6 @@
     let selectedCell = null;
     let originalValue = "";
 
-    /* Enable buttons after load */
     function enableButtons() {
       document.getElementById("loadBtn").classList.add("enabled");
       document.getElementById("saveBtn").classList.add("enabled");
@@ -147,7 +146,6 @@
       box.textContent += `${timestamp} — ${msg}\n`;
     }
 
-    /* Load sheet */
     async function loadSheet() {
       const res = await fetch(URL);
       const data = await res.json();
@@ -156,7 +154,6 @@
       logMessage("sheet loaded");
     }
 
-    /* Render table */
     function renderTable(data) {
       const table = document.getElementById("sheet");
       table.innerHTML = "";
@@ -191,7 +188,6 @@
       });
     }
 
-    /* Compute E = B - D */
     function computeE(r) {
       const table = document.getElementById("sheet");
       const row = table.rows[r];
@@ -208,9 +204,8 @@
       }
     }
 
-    /* Select cell */
     function selectCell(td) {
-      document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+      finalizeCell(); // finalize previous cell if needed
 
       selectedCell = td;
       originalValue = td.textContent;
@@ -222,7 +217,18 @@
       }
     }
 
-    /* Keypad input */
+    function finalizeCell() {
+      if (!selectedCell) return;
+
+      if (selectedCell.textContent.trim() === "") {
+        selectedCell.textContent = "0";
+      }
+
+      selectedCell.classList.remove("selected");
+      selectedCell = null;
+      updateAllE();
+    }
+
     function pressKey(key) {
       if (!selectedCell) return;
 
@@ -233,12 +239,7 @@
       }
 
       if (key === "enter") {
-        if (selectedCell.textContent.trim() === "") {
-          selectedCell.textContent = "0";
-        }
-        selectedCell.classList.remove("selected");
-        selectedCell = null;
-        updateAllE();
+        finalizeCell();
         return;
       }
 
@@ -246,8 +247,9 @@
       updateAllE();
     }
 
-    /* Save sheet */
     async function saveSheet() {
+      finalizeCell();
+
       const rows = [];
       const trs = document.querySelectorAll("#sheet tr");
 
@@ -276,6 +278,16 @@
         e.preventDefault();
         pressKey(btn.dataset.key);
       });
+    });
+
+    /* Clicking anywhere else finalizes the cell */
+    document.addEventListener("click", e => {
+      if (!selectedCell) return;
+
+      if (e.target.closest("#keypad")) return;
+      if (e.target === selectedCell) return;
+
+      finalizeCell();
     });
 
     /* Enable load/save click after binding */
