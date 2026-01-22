@@ -52,6 +52,7 @@
       font-size: 14px;
       color: #444;
       white-space: pre-line;
+      min-height: 3.2em; /* ensures 3-line space even when empty */
     }
 
     /* Keypad container */
@@ -59,7 +60,7 @@
       background: #f2f2f2;
       padding: 20px;
       border-radius: 12px;
-      display: none; /* HIDDEN UNTIL TABLE LOADS */
+      display: none; /* hidden until table loads */
       flex-direction: column;
       gap: 12px;
       margin-top: 140px;
@@ -144,23 +145,37 @@
     let selectedCell = null;
     let originalValue = "";
     let keypadEnabled = true;
+    let initialPaddingDone = false;
 
     /* Disable keypad toggle until table loads */
     const toggleBtn = document.getElementById("toggleKeypadBtn");
     toggleBtn.classList.remove("enabled");
 
+    function logMessage(msg) {
+      const box = document.getElementById("messages");
+      const timestamp = new Date().toLocaleTimeString();
+
+      // Add new message
+      box.textContent += `${timestamp} — ${msg}\n`;
+
+      // Split into lines
+      let lines = box.textContent.trimEnd().split("\n");
+
+      // Keep only last 3 lines
+      if (lines.length > 3) {
+        lines = lines.slice(lines.length - 3);
+      }
+
+      // Rebuild text
+      box.textContent = lines.join("\n") + "\n";
+    }
+
     function enableButtons() {
       document.getElementById("loadBtn").classList.add("enabled");
       document.getElementById("saveBtn").classList.add("enabled");
 
-      toggleBtn.classList.add("enabled"); // enable keypad toggle
-      document.getElementById("keypad").style.display = "flex"; // show keypad after load
-    }
-
-    function logMessage(msg) {
-      const box = document.getElementById("messages");
-      const timestamp = new Date().toLocaleTimeString();
-      box.textContent += `${timestamp} — ${msg}\n`;
+      toggleBtn.classList.add("enabled");
+      document.getElementById("keypad").style.display = "flex";
     }
 
     async function loadSheet() {
@@ -168,7 +183,15 @@
       const data = await res.json();
       renderTable(data);
       enableButtons();
+
       logMessage("sheet loaded");
+
+      // Add two blank lines ONLY on first load
+      if (!initialPaddingDone) {
+        const box = document.getElementById("messages");
+        box.textContent += "\n\n";
+        initialPaddingDone = true;
+      }
     }
 
     function renderTable(data) {
