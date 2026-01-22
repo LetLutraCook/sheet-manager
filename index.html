@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <title>sheet manager</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
+    body { font-family: Arial, sans-serif; padding: 20px; display: flex; gap: 30px; }
+
     table { border-collapse: collapse; margin-top: 20px; }
     td, th { border: 1px solid #ccc; padding: 6px 10px; }
 
@@ -20,7 +21,12 @@
       margin: 0;
     }
 
-    button { margin-top: 20px; padding: 8px 14px; }
+    /* Selected cell highlight */
+    .selected {
+      background-color: #d0d0d0 !important;
+    }
+
+    button { padding: 8px 14px; margin-right: 10px; }
 
     #messages {
       margin-top: 15px;
@@ -28,21 +34,69 @@
       color: #444;
       white-space: pre-line;
     }
+
+    /* Keypad layout */
+    #keypad {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 40px;
+    }
+
+    #keypad button {
+      width: 60px;
+      padding: 12px;
+      font-size: 18px;
+    }
+
+    #keypad-row {
+      display: flex;
+      gap: 8px;
+    }
   </style>
 </head>
 
 <body onload="loadSheet()">
-  <h2>sheet manager</h2>
 
-  <button onclick="loadSheet()">Load Sheet</button>
-  <button onclick="saveSheet()">Save Sheet</button>
+  <div>
+    <h2>sheet manager</h2>
 
-  <div id="messages"></div>
+    <button onclick="loadSheet()">Load Sheet</button>
+    <button onclick="saveSheet()">Save Sheet</button>
 
-  <table id="sheet"></table>
+    <div id="messages"></div>
+
+    <table id="sheet"></table>
+  </div>
+
+  <!-- NUMERIC KEYPAD -->
+  <div id="keypad">
+    <div id="keypad-row">
+      <button onclick="pressKey('1')">1</button>
+      <button onclick="pressKey('2')">2</button>
+      <button onclick="pressKey('3')">3</button>
+    </div>
+    <div id="keypad-row">
+      <button onclick="pressKey('4')">4</button>
+      <button onclick="pressKey('5')">5</button>
+      <button onclick="pressKey('6')">6</button>
+    </div>
+    <div id="keypad-row">
+      <button onclick="pressKey('7')">7</button>
+      <button onclick="pressKey('8')">8</button>
+      <button onclick="pressKey('9')">9</button>
+    </div>
+    <div id="keypad-row">
+      <button onclick="pressKey('0')">0</button>
+      <button onclick="pressKey('del')">Del</button>
+      <button onclick="pressKey('enter')">Enter</button>
+    </div>
+  </div>
 
   <script>
     const URL = "https://script.google.com/macros/s/AKfycbxlJFQbLvtzRqd1ZYIG2n-d98gKyRPDwt-Vf2vMq11mrPRprnUYL3x72Se2Kqtm6ZTbPQ/exec";
+
+    let selectedInput = null;
 
     function logMessage(msg) {
       const box = document.getElementById("messages");
@@ -63,7 +117,6 @@
 
       data.forEach((row, r) => {
         const tr = document.createElement("tr");
-
         tr.style.backgroundColor = r % 2 === 0 ? "#ffffff" : "#f2f2f2";
 
         row.forEach((cell, c) => {
@@ -84,6 +137,13 @@
             input.value = cell;
             input.dataset.r = r;
             input.dataset.c = c;
+
+            // CLICK TO SELECT CELL
+            input.addEventListener("click", (e) => {
+              e.stopPropagation();
+              selectCell(input, td);
+            });
+
             td.appendChild(input);
           }
 
@@ -92,6 +152,33 @@
 
         table.appendChild(tr);
       });
+    }
+
+    function selectCell(input, td) {
+      // Clear previous selection
+      document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+
+      selectedInput = input;
+      td.classList.add("selected");
+    }
+
+    function pressKey(key) {
+      if (!selectedInput) return;
+
+      if (key === "del") {
+        selectedInput.value = selectedInput.value.slice(0, -1);
+        return;
+      }
+
+      if (key === "enter") {
+        // Deselect
+        document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+        selectedInput = null;
+        return;
+      }
+
+      // Append number
+      selectedInput.value += key;
     }
 
     async function saveSheet() {
@@ -122,5 +209,6 @@
       logMessage("sheet saved");
     }
   </script>
+
 </body>
 </html>
