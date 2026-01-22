@@ -51,9 +51,26 @@
     const writeBtn = document.getElementById("writeBtn");
 
     readBtn.onclick = () => {
+      console.log("Read button clicked");
+      console.log("Fetching:", API_URL);
+
       fetch(API_URL)
-        .then(r => r.json())
-        .then(data => {
+        .then(r => {
+          console.log("Response received:", r);
+          return r.text();
+        })
+        .then(text => {
+          console.log("Raw response text:", text);
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (err) {
+            console.error("JSON parse error:", err);
+            return;
+          }
+
+          console.log("Parsed JSON:", data);
+
           table.innerHTML = "";
           data.forEach(row => {
             const tr = document.createElement("tr");
@@ -67,12 +84,20 @@
             });
             table.appendChild(tr);
           });
+
+          console.log("Table populated");
+        })
+        .catch(err => {
+          console.error("Fetch error:", err);
         });
     };
 
     writeBtn.onclick = () => {
+      console.log("Write button clicked");
+
       const rows = [];
       const trList = table.querySelectorAll("tr");
+
       trList.forEach(tr => {
         const row = [];
         tr.querySelectorAll("input").forEach(input => {
@@ -81,14 +106,23 @@
         rows.push(row);
       });
 
+      console.log("Data to write:", rows);
+
       fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(rows)
       })
-      .then(r => r.text())
+      .then(r => {
+        console.log("Write response:", r);
+        return r.text();
+      })
       .then(msg => {
+        console.log("Write result text:", msg);
         alert("Sheet updated: " + msg);
+      })
+      .catch(err => {
+        console.error("Write error:", err);
       });
     };
   </script>
