@@ -20,7 +20,7 @@
   <table id="sheet"></table>
 
   <script>
-    const URL = "https://script.google.com/macros/s/AKfycbxlJFQbLvtzRqd1ZYIG2n-d98gKyRPDwt-Vf2vMq11mrPRprnUYL3x72Se2Kqtm6ZTbPQ/exec";
+    const URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjd_9dIBJsLAQQy14z-ppCin3nk-0abs1sOQwrbGfIrukKabAr5uPVZUrYAgShbszC3Xo7NzQR7P8kMxfNd6L2DsoGx1pzZkpKQ25NbkArgujMhoPSUDyLT3cPljiW_sPsAWDAFB5XqQ297UryoevY-0cEx3ZezT8trhJ04DW5aDArEJaDo46nwWSExhEYgF3LNs1oNe8M7GEmYSw8lVij6foj3GXp4mpKgxRXpJn-b-qZ0ghSPBSEuXIhzk1BjKyT0R-_ytY2OwZ2XS9GNFgxXycO0GwfggQ6IQlao&lib=MmnhR7btKInj58QZjGZ_D-ko5nz9syJhs";
 
     async function loadSheet() {
       const res = await fetch(URL);
@@ -31,17 +31,29 @@
     function renderTable(data) {
       const table = document.getElementById("sheet");
       table.innerHTML = "";
+
       data.forEach((row, r) => {
         const tr = document.createElement("tr");
+
         row.forEach((cell, c) => {
           const td = document.createElement("td");
-          const input = document.createElement("input");
-          input.value = cell;
-          input.dataset.r = r;
-          input.dataset.c = c;
-          td.appendChild(input);
+
+          const isHeaderRow = r === 0;
+          const isHeaderCol = c === 0;
+
+          if (isHeaderRow || isHeaderCol) {
+            td.textContent = cell;
+          } else {
+            const input = document.createElement("input");
+            input.value = cell;
+            input.dataset.r = r;
+            input.dataset.c = c;
+            td.appendChild(input);
+          }
+
           tr.appendChild(td);
         });
+
         table.appendChild(tr);
       });
     }
@@ -61,6 +73,8 @@
         method: "POST",
         body: JSON.stringify(rows)
       });
+
+      alert("Saved");
     }
   </script>
 </body>
