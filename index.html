@@ -4,21 +4,20 @@
   <meta charset="UTF-8">
   <title>sheet manager</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; display: flex; gap: 30px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+    }
 
     table { border-collapse: collapse; margin-top: 20px; }
     td, th { border: 1px solid #ccc; padding: 6px 10px; }
 
-    /* Invisible input styling */
-    input {
-      border: none;
-      background: transparent;
-      box-shadow: none;
-      outline: none;
-      width: 100%;
-      font: inherit;
-      padding: 0;
-      margin: 0;
+    /* Editable cell styling (no text boxes) */
+    .editable {
+      cursor: pointer;
     }
 
     /* Selected cell highlight */
@@ -26,7 +25,17 @@
       background-color: #d0d0d0 !important;
     }
 
-    button { padding: 8px 14px; margin-right: 10px; }
+    button {
+      padding: 8px 14px;
+      margin-right: 10px;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    button.enabled {
+      opacity: 1;
+      pointer-events: auto;
+    }
 
     #messages {
       margin-top: 15px;
@@ -35,23 +44,36 @@
       white-space: pre-line;
     }
 
-    /* Keypad layout */
+    /* Keypad container */
     #keypad {
+      background: #555;
+      padding: 20px;
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-top: 40px;
+      gap: 12px;
+      margin-top: 60px;
     }
 
+    /* Keypad rows */
+    .keypad-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Keypad buttons */
     #keypad button {
       width: 60px;
-      padding: 12px;
-      font-size: 18px;
+      height: 60px;
+      background: #ddd;
+      border: none;
+      border-radius: 10px;
+      font-size: 20px;
+      cursor: pointer;
     }
 
-    #keypad-row {
-      display: flex;
-      gap: 8px;
+    #keypad button:active {
+      background: #ccc;
     }
   </style>
 </head>
@@ -61,8 +83,8 @@
   <div>
     <h2>sheet manager</h2>
 
-    <button onclick="loadSheet()">Load Sheet</button>
-    <button onclick="saveSheet()">Save Sheet</button>
+    <button id="loadBtn" onclick="loadSheet()">Load Sheet</button>
+    <button id="saveBtn" onclick="saveSheet()">Save Sheet</button>
 
     <div id="messages"></div>
 
@@ -71,22 +93,22 @@
 
   <!-- NUMERIC KEYPAD -->
   <div id="keypad">
-    <div id="keypad-row">
+    <div class="keypad-row">
       <button onclick="pressKey('1')">1</button>
       <button onclick="pressKey('2')">2</button>
       <button onclick="pressKey('3')">3</button>
     </div>
-    <div id="keypad-row">
+    <div class="keypad-row">
       <button onclick="pressKey('4')">4</button>
       <button onclick="pressKey('5')">5</button>
       <button onclick="pressKey('6')">6</button>
     </div>
-    <div id="keypad-row">
+    <div class="keypad-row">
       <button onclick="pressKey('7')">7</button>
       <button onclick="pressKey('8')">8</button>
       <button onclick="pressKey('9')">9</button>
     </div>
-    <div id="keypad-row">
+    <div class="keypad-row">
       <button onclick="pressKey('0')">0</button>
       <button onclick="pressKey('del')">Del</button>
       <button onclick="pressKey('enter')">Enter</button>
@@ -96,7 +118,12 @@
   <script>
     const URL = "https://script.google.com/macros/s/AKfycbxlJFQbLvtzRqd1ZYIG2n-d98gKyRPDwt-Vf2vMq11mrPRprnUYL3x72Se2Kqtm6ZTbPQ/exec";
 
-    let selectedInput = null;
+    let selectedCell = null;
+
+    function enableButtons() {
+      document.getElementById("loadBtn").classList.add("enabled");
+      document.getElementById("saveBtn").classList.add("enabled");
+    }
 
     function logMessage(msg) {
       const box = document.getElementById("messages");
@@ -108,6 +135,7 @@
       const res = await fetch(URL);
       const data = await res.json();
       renderTable(data);
+      enableButtons();
       logMessage("sheet loaded");
     }
 
@@ -133,18 +161,10 @@
             const d = Number(row[3]);
             td.textContent = b - d;
           } else {
-            const input = document.createElement("input");
-            input.value = cell;
-            input.dataset.r = r;
-            input.dataset.c = c;
+            td.textContent = cell;
+            td.classList.add("editable");
 
-            // CLICK TO SELECT CELL
-            input.addEventListener("click", (e) => {
-              e.stopPropagation();
-              selectCell(input, td);
-            });
-
-            td.appendChild(input);
+            td.addEventListener("click", () => selectCell(td));
           }
 
           tr.appendChild(td);
@@ -154,50 +174,39 @@
       });
     }
 
-    function selectCell(input, td) {
-      // Clear previous selection
+    function selectCell(td) {
       document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
-
-      selectedInput = input;
+      selectedCell = td;
       td.classList.add("selected");
     }
 
     function pressKey(key) {
-      if (!selectedInput) return;
+      if (!selectedCell) return;
 
       if (key === "del") {
-        selectedInput.value = selectedInput.value.slice(0, -1);
+        selectedCell.textContent = selectedCell.textContent.slice(0, -1);
         return;
       }
 
       if (key === "enter") {
-        // Deselect
-        document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
-        selectedInput = null;
+        selectedCell.classList.remove("selected");
+        selectedCell = null;
         return;
       }
 
-      // Append number
-      selectedInput.value += key;
+      selectedCell.textContent += key;
     }
 
     async function saveSheet() {
       const rows = [];
-      const table = document.getElementById("sheet");
-      const trs = table.querySelectorAll("tr");
+      const trs = document.querySelectorAll("#sheet tr");
 
       trs.forEach((tr, r) => {
         const tds = tr.querySelectorAll("td");
         rows[r] = [];
 
         tds.forEach((td, c) => {
-          const input = td.querySelector("input");
-
-          if (input) {
-            rows[r][c] = input.value;
-          } else {
-            rows[r][c] = td.textContent;
-          }
+          rows[r][c] = td.textContent;
         });
       });
 
