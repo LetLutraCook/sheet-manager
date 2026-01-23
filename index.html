@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
   <style>
-    /* Prevent scrolling on the page */
     html, body {
       height: 100%;
       overflow: hidden;
@@ -17,18 +16,29 @@
 
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      display: flex;
-      gap: 40px;
-      align-items: flex-start;
       background-color: #fafafa;
+      display: flex;
+      flex-direction: column;
     }
 
+    /* Top bar for buttons */
+    .header {
+      padding: 20px 40px 0 40px;
+    }
+
+    /* Main Container for Table and Controls */
     .main-layout {
         display: flex;
-        gap: 40px;
+        justify-content: space-between; /* Pushes items to the far left and right */
         align-items: flex-start;
-        width: 100%;
+        padding: 0 40px 40px 40px; /* Equal padding on left and right */
+        gap: 40px;
+        flex: 1;
+    }
+
+    /* Left Side: Table */
+    .table-section {
+        flex: 1;
     }
 
     table { border-collapse: collapse; background: white; width: 100%; margin-top: 10px; }
@@ -37,6 +47,7 @@
     .editable { cursor: pointer; }
     .selected { background-color: #d0d0d0 !important; }
 
+    /* Top Buttons */
     .top-btn {
       width: 60px;
       height: 60px;
@@ -51,7 +62,6 @@
       border: 1px solid #ccc;
       background: white;
       cursor: pointer;
-      vertical-align: top;
     }
 
     .top-btn:active { background: #f0f0f0; }
@@ -63,10 +73,12 @@
     .mode-minus { color: #cc4125; }
     .mode-plus { color: #2b7d2b; }
 
+    /* Right Side: Keypad & Preview */
     #controls-container { 
         display: none; 
+        flex-direction: column;
         gap: 20px; 
-        padding-top: 70px; 
+        margin-top: 10px; /* Matches the margin-top of the table exactly */
     }
 
     #keypad, #calc-preview {
@@ -97,20 +109,19 @@
       width: 60px; height: 60px; background: #ffffff; border: 1px solid #ccc; border-radius: 10px; font-size: 20px; cursor: pointer; display: flex; justify-content: center; align-items: center;
     }
 
-    /* FULL SCREEN OVERLAY */
+    /* Full Screen Overlay */
     #status-overlay {
         position: fixed;
         top: 0; left: 0;
         width: 100vw; height: 100vh;
-        background: rgba(0,0,0,0.5); /* slightly transparent black */
-        display: none; /* hidden by default */
+        background: rgba(0,0,0,0.5);
+        display: none;
         justify-content: center;
         align-items: center;
         z-index: 9999;
-        pointer-events: all; /* blocks interaction with elements behind it */
+        pointer-events: all;
     }
 
-    /* SQUARE STATUS BOX */
     #status-box {
         background: black;
         color: white;
@@ -121,23 +132,10 @@
         justify-content: center;
         gap: 15px;
         min-width: 120px;
-        /* No rounded corners */
     }
 
-    /* PERFECTLY CENTERED SPINNER */
-    .spinner-container {
-        display: inline-block;
-        width: 30px;
-        height: 30px;
-    }
-
-    .spinner {
-        display: block;
-        font-size: 30px;
-        line-height: 1;
-        animation: spin 1s linear infinite;
-        transform-origin: center center; /* Ensure it spins on its axis */
-    }
+    .spinner-container { display: inline-block; width: 30px; height: 30px; }
+    .spinner { display: block; font-size: 30px; line-height: 1; animation: spin 1s linear infinite; transform-origin: center center; }
 
     @keyframes spin {
         from { transform: rotate(0deg); }
@@ -150,24 +148,23 @@
 
   <div id="status-overlay">
     <div id="status-box">
-        <div class="spinner-container">
-            <i id="status-icon" class="bi bi-arrow-repeat spinner"></i>
-        </div>
+        <div class="spinner-container"><i id="status-icon" class="bi bi-arrow-repeat spinner"></i></div>
         <span id="status-text">Processing...</span>
     </div>
   </div>
 
+  <div class="header">
+    <button id="loadBtn" class="top-btn"><i class="bi bi-arrow-clockwise"></i></button>
+    <button id="saveBtn" class="top-btn"><i class="bi bi-save"></i></button>
+    <button id="toggleKeypadBtn" class="top-btn"><i class="bi bi-keyboard"></i></button>
+    <button id="modeBtn" class="top-btn">
+      <i id="modeIcon" class="bi bi-pencil-square"></i>
+      <span id="modeText" class="mode-replace">Replace</span>
+    </button>
+  </div>
+
   <div class="main-layout">
-    <div style="flex: 1; padding: 20px;">
-      <button id="loadBtn" class="top-btn"><i class="bi bi-arrow-clockwise"></i></button>
-      <button id="saveBtn" class="top-btn"><i class="bi bi-save"></i></button>
-      <button id="toggleKeypadBtn" class="top-btn"><i class="bi bi-keyboard"></i></button>
-
-      <button id="modeBtn" class="top-btn">
-        <i id="modeIcon" class="bi bi-pencil-square"></i>
-        <span id="modeText" class="mode-replace">Replace</span>
-      </button>
-
+    <div class="table-section">
       <table id="sheet"></table>
     </div>
 
@@ -213,16 +210,13 @@
         const overlay = document.getElementById("status-overlay");
         const text = document.getElementById("status-text");
         const icon = document.getElementById("status-icon");
-
         overlay.style.display = "flex";
         text.textContent = msg;
-
         if (isDone) {
             icon.classList.remove("spinner", "bi-arrow-repeat");
             icon.classList.add("bi-check-circle");
             setTimeout(() => {
                 overlay.style.display = "none";
-                // Reset icon for next use
                 icon.classList.add("spinner", "bi-arrow-repeat");
                 icon.classList.remove("bi-check-circle");
             }, 1000);
@@ -238,9 +232,7 @@
           document.querySelectorAll(".top-btn").forEach(b => b.classList.add("enabled"));
           document.getElementById("controls-container").style.display = "flex";
           showStatus("Loaded", true);
-      } catch (e) {
-          showStatus("Error", true);
-      }
+      } catch (e) { showStatus("Error", true); }
     }
 
     function renderTable(data) {
@@ -318,9 +310,7 @@
         document.getElementById("pre-start").textContent = start;
         document.getElementById("pre-input").innerHTML = `<span style="color:${currentMode==='minus'?'#cc4125':'#2b7d2b'}">${symbol}</span> ${input}`;
         document.getElementById("pre-total").textContent = total;
-      } else {
-        preview.style.visibility = "hidden";
-      }
+      } else { preview.style.visibility = "hidden"; }
     }
 
     function pressKey(key) {
@@ -355,24 +345,16 @@
       }
     });
 
-    document.getElementById("loadBtn").addEventListener(fastEvent, (e) => { 
-        if(fastEvent === "touchstart") e.preventDefault(); 
-        loadSheet(); 
-    });
-
+    document.getElementById("loadBtn").addEventListener(fastEvent, (e) => { if(fastEvent === "touchstart") e.preventDefault(); loadSheet(); });
     document.getElementById("saveBtn").addEventListener(fastEvent, async (e) => { 
         if(fastEvent === "touchstart") e.preventDefault();
         finalizeCell();
         showStatus("Saving...");
-        const rows = Array.from(document.querySelectorAll("#sheet tr")).map(tr => 
-            Array.from(tr.querySelectorAll("td")).map(td => td.textContent)
-        );
+        const rows = Array.from(document.querySelectorAll("#sheet tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td => td.textContent));
         try {
             await fetch(URL, { method: "POST", body: JSON.stringify(rows) });
             showStatus("Saved", true);
-        } catch(e) {
-            showStatus("Error", true);
-        }
+        } catch(e) { showStatus("Error", true); }
     });
 
     document.getElementById("toggleKeypadBtn").addEventListener(fastEvent, (e) => {
@@ -382,10 +364,7 @@
     });
 
     document.querySelectorAll("#keypad button").forEach(btn => {
-      btn.addEventListener(fastEvent, e => {
-        e.preventDefault();
-        pressKey(btn.dataset.key);
-      });
+      btn.addEventListener(fastEvent, e => { e.preventDefault(); pressKey(btn.dataset.key); });
     });
 
     document.addEventListener("mousedown", e => {
