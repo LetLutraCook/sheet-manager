@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>sheet manager</title>
 
-  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
   <style>
@@ -47,31 +46,57 @@
       pointer-events: auto;
     }
 
+    /* Mode button specific style */
+    #modeBtn {
+        font-size: 14px;
+        font-weight: bold;
+        flex-direction: column;
+        line-height: 1;
+    }
+    #modeBtn i { font-size: 20px; margin-bottom: 2px; }
+
     #messages {
       margin-top: 15px;
       font-size: 14px;
       color: #444;
       white-space: pre-line;
-      min-height: 3.2em; /* ensures 3-line space even when empty */
+      min-height: 3.2em;
     }
 
-    /* Keypad container */
-    #keypad {
+    /* Keypad & Preview Container */
+    #controls-container {
+        display: none; /* Hidden until load */
+        flex-direction: row;
+        gap: 20px;
+        margin-top: 140px;
+    }
+
+    #keypad, #minus-preview {
       background: #f2f2f2;
       padding: 20px;
       border-radius: 12px;
-      display: none; /* hidden until table loads */
+      display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-top: 140px;
     }
+
+    /* Minus Preview Panel */
+    #minus-preview {
+        min-width: 120px;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        visibility: hidden; /* Only show when in Minus mode */
+    }
+    .preview-val { color: #888; font-size: 18px; }
+    .preview-minus { color: #cc4125; border-bottom: 2px solid #ccc; margin-bottom: 5px; }
+    .preview-result { font-weight: bold; }
 
     .keypad-row {
       display: flex;
       gap: 12px;
     }
 
-    /* Keypad buttons */
     #keypad button {
       width: 60px;
       height: 60px;
@@ -81,7 +106,6 @@
       font-size: 20px;
       color: black;
       cursor: pointer;
-
       display: flex;
       justify-content: center;
       align-items: center;
@@ -96,8 +120,6 @@
 <body onload="loadSheet()">
 
   <div>
-
-    <!-- ICON BUTTONS -->
     <button id="loadBtn" class="top-btn">
       <i class="bi bi-arrow-clockwise"></i>
     </button>
@@ -110,32 +132,44 @@
       <i class="bi bi-keyboard"></i>
     </button>
 
+    <button id="modeBtn" class="top-btn">
+        <i class="bi bi-pencil-square"></i>
+        <span>REPLACE</span>
+    </button>
+
     <div id="messages"></div>
 
     <table id="sheet"></table>
   </div>
 
-  <!-- NUMERIC KEYPAD -->
-  <div id="keypad">
-    <div class="keypad-row">
-      <button data-key="1">1</button>
-      <button data-key="2">2</button>
-      <button data-key="3">3</button>
+  <div id="controls-container">
+    <div id="keypad">
+        <div class="keypad-row">
+          <button data-key="1">1</button>
+          <button data-key="2">2</button>
+          <button data-key="3">3</button>
+        </div>
+        <div class="keypad-row">
+          <button data-key="4">4</button>
+          <button data-key="5">5</button>
+          <button data-key="6">6</button>
+        </div>
+        <div class="keypad-row">
+          <button data-key="7">7</button>
+          <button data-key="8">8</button>
+          <button data-key="9">9</button>
+        </div>
+        <div class="keypad-row">
+          <button data-key="0">0</button>
+          <button data-key="del"><i class="bi bi-backspace"></i></button>
+          <button data-key="enter"><i class="bi bi-check-lg"></i></button>
+        </div>
     </div>
-    <div class="keypad-row">
-      <button data-key="4">4</button>
-      <button data-key="5">5</button>
-      <button data-key="6">6</button>
-    </div>
-    <div class="keypad-row">
-      <button data-key="7">7</button>
-      <button data-key="8">8</button>
-      <button data-key="9">9</button>
-    </div>
-    <div class="keypad-row">
-      <button data-key="0">0</button>
-      <button data-key="del"><i class="bi bi-backspace"></i></button>
-      <button data-key="enter"><i class="bi bi-check-lg"></i></button>
+
+    <div id="minus-preview">
+        <div class="preview-val" id="pre-start">0</div>
+        <div class="preview-minus" id="pre-input">- 0</div>
+        <div class="preview-result" id="pre-total">0</div>
     </div>
   </div>
 
@@ -146,36 +180,30 @@
     let originalValue = "";
     let keypadEnabled = true;
     let initialPaddingDone = false;
+    
+    // Mode Logic: 'replace' or 'minus'
+    let currentMode = 'replace'; 
+    let minusInput = ""; 
 
-    /* Disable keypad toggle until table loads */
     const toggleBtn = document.getElementById("toggleKeypadBtn");
-    toggleBtn.classList.remove("enabled");
+    const modeBtn = document.getElementById("modeBtn");
+    const previewDiv = document.getElementById("minus-preview");
 
     function logMessage(msg) {
       const box = document.getElementById("messages");
       const timestamp = new Date().toLocaleTimeString();
-
-      // Add new message
       box.textContent += `${timestamp} — ${msg}\n`;
-
-      // Split into lines
       let lines = box.textContent.trimEnd().split("\n");
-
-      // Keep only last 3 lines
-      if (lines.length > 3) {
-        lines = lines.slice(lines.length - 3);
-      }
-
-      // Rebuild text
+      if (lines.length > 3) lines = lines.slice(lines.length - 3);
       box.textContent = lines.join("\n") + "\n";
     }
 
     function enableButtons() {
       document.getElementById("loadBtn").classList.add("enabled");
       document.getElementById("saveBtn").classList.add("enabled");
-
       toggleBtn.classList.add("enabled");
-      document.getElementById("keypad").style.display = "flex";
+      modeBtn.classList.add("enabled");
+      document.getElementById("controls-container").style.display = "flex";
     }
 
     async function loadSheet() {
@@ -183,13 +211,9 @@
       const data = await res.json();
       renderTable(data);
       enableButtons();
-
       logMessage("sheet loaded");
-
-      // Add two blank lines ONLY on first load
       if (!initialPaddingDone) {
-        const box = document.getElementById("messages");
-        box.textContent += "\n\n";
+        document.getElementById("messages").textContent += "\n\n";
         initialPaddingDone = true;
       }
     }
@@ -197,73 +221,63 @@
     function renderTable(data) {
       const table = document.getElementById("sheet");
       table.innerHTML = "";
-
       data.forEach((row, r) => {
         const tr = document.createElement("tr");
         tr.style.backgroundColor = r % 2 === 0 ? "#ffffff" : "#f2f2f2";
-
         row.forEach((cell, c) => {
           const td = document.createElement("td");
-
-          const isHeaderRow = r === 0;
-          const isHeaderCol = c === 0;
-          const isComputedE = c === 4 && r !== 0;
-
-          if (isHeaderRow || isHeaderCol) {
+          if (r === 0 || c === 0) {
             td.textContent = cell;
-          } else if (isComputedE) {
-            const b = Number(row[1]);
-            const d = Number(row[3]);
-            const val = b - d;
-            td.textContent = val;
-            if (val < 0) td.style.background = "#cc4125";
+          } else if (c === 4 && r !== 0) {
+            updateComputedCell(td, row[1], row[3]);
           } else {
             td.textContent = cell;
             td.classList.add("editable");
             td.addEventListener("click", () => selectCell(td));
           }
-
           tr.appendChild(td);
         });
-
         table.appendChild(tr);
       });
     }
 
-    function computeE(r) {
-      const table = document.getElementById("sheet");
-      const row = table.rows[r];
-      if (!row) return 0;
-      const b = Number(row.cells[1].textContent);
-      const d = Number(row.cells[3].textContent);
-      return b - d;
+    function updateComputedCell(td, bVal, dVal) {
+        const val = Number(bVal) - Number(dVal);
+        td.textContent = val;
+        td.style.background = val < 0 ? "#cc4125" : "";
     }
 
     function updateAllE() {
       const table = document.getElementById("sheet");
       for (let r = 1; r < table.rows.length; r++) {
-        const val = computeE(r);
-        const cell = table.rows[r].cells[4];
-        cell.textContent = val;
-        cell.style.background = val < 0 ? "#cc4125" : "";
+        const b = table.rows[r].cells[1].textContent;
+        const d = table.rows[r].cells[3].textContent;
+        updateComputedCell(table.rows[r].cells[4], b, d);
       }
     }
 
     function selectCell(td) {
       finalizeCell();
-
       selectedCell = td;
       originalValue = td.textContent;
-
+      minusInput = ""; // reset math for new selection
       td.classList.add("selected");
 
-      if (td.textContent === "0") {
-        td.textContent = "";
+      if (currentMode === 'replace') {
+          if (td.textContent === "0") td.textContent = "";
+      } else {
+          updateMinusPreview();
       }
     }
 
     function finalizeCell() {
       if (!selectedCell) return;
+      
+      if (currentMode === 'minus' && minusInput !== "") {
+          const start = Number(originalValue) || 0;
+          const sub = Number(minusInput) || 0;
+          selectedCell.textContent = start - sub;
+      }
 
       if (selectedCell.textContent.trim() === "") {
         selectedCell.textContent = "0";
@@ -271,15 +285,35 @@
 
       selectedCell.classList.remove("selected");
       selectedCell = null;
+      minusInput = "";
       updateAllE();
+      updateMinusPreview();
+    }
+
+    function updateMinusPreview() {
+        if (currentMode === 'minus' && selectedCell) {
+            previewDiv.style.visibility = "visible";
+            const start = Number(originalValue) || 0;
+            const input = Number(minusInput) || 0;
+            document.getElementById("pre-start").textContent = start;
+            document.getElementById("pre-input").textContent = "- " + input;
+            document.getElementById("pre-total").textContent = "= " + (start - input);
+        } else {
+            previewDiv.style.visibility = "hidden";
+        }
     }
 
     function pressKey(key) {
       if (!selectedCell || !keypadEnabled) return;
 
       if (key === "del") {
-        selectedCell.textContent = selectedCell.textContent.slice(0, -1);
+        if (currentMode === 'replace') {
+            selectedCell.textContent = selectedCell.textContent.slice(0, -1);
+        } else {
+            minusInput = minusInput.slice(0, -1);
+        }
         updateAllE();
+        updateMinusPreview();
         return;
       }
 
@@ -288,36 +322,49 @@
         return;
       }
 
-      selectedCell.textContent += key;
+      if (currentMode === 'replace') {
+          selectedCell.textContent += key;
+      } else {
+          minusInput += key;
+      }
+      
       updateAllE();
+      updateMinusPreview();
     }
 
     async function saveSheet() {
       finalizeCell();
-
       const rows = [];
       const trs = document.querySelectorAll("#sheet tr");
-
       trs.forEach((tr, r) => {
-        const tds = tr.querySelectorAll("td");
-        rows[r] = [];
-
-        tds.forEach((td, c) => {
-          rows[r][c] = td.textContent;
-        });
+        rows[r] = Array.from(tr.querySelectorAll("td")).map(td => td.textContent);
       });
 
-      await fetch(URL, {
-        method: "POST",
-        body: JSON.stringify(rows)
-      });
-
+      await fetch(URL, { method: "POST", body: JSON.stringify(rows) });
       logMessage("sheet saved");
     }
 
-    /* FAST keypad: choose correct event */
-    const inputEvent = ("ontouchstart" in window) ? "touchstart" : "click";
+    // Toggle Replace vs Minus Mode
+    modeBtn.addEventListener("click", () => {
+        if (currentMode === 'replace') {
+            currentMode = 'minus';
+            modeBtn.querySelector("span").textContent = "MINUS";
+            modeBtn.querySelector("i").className = "bi bi-dash-square";
+        } else {
+            currentMode = 'replace';
+            modeBtn.querySelector("span").textContent = "REPLACE";
+            modeBtn.querySelector("i").className = "bi bi-pencil-square";
+        }
+        // If a cell is already selected, refresh the view
+        if (selectedCell) {
+            if (currentMode === 'replace') {
+                selectedCell.textContent = originalValue; // reset if switching back
+            }
+            updateMinusPreview();
+        }
+    });
 
+    const inputEvent = ("ontouchstart" in window) ? "touchstart" : "click";
     document.querySelectorAll("#keypad button").forEach(btn => {
       btn.addEventListener(inputEvent, e => {
         e.preventDefault();
@@ -325,26 +372,18 @@
       });
     });
 
-    /* Clicking anywhere else finalizes the cell */
     document.addEventListener("click", e => {
       if (!selectedCell) return;
-
-      if (e.target.closest("#keypad")) return;
-      if (e.target === selectedCell) return;
-
+      if (e.target.closest("#controls-container") || e.target.closest(".top-btn") || e.target === selectedCell) return;
       finalizeCell();
     });
 
-    /* Load/save button actions */
     document.getElementById("loadBtn").addEventListener("click", loadSheet);
     document.getElementById("saveBtn").addEventListener("click", saveSheet);
-
-    /* Keypad toggle */
     toggleBtn.addEventListener("click", () => {
       keypadEnabled = !keypadEnabled;
-      document.getElementById("keypad").style.display = keypadEnabled ? "flex" : "none";
+      document.getElementById("controls-container").style.display = keypadEnabled ? "flex" : "none";
     });
   </script>
-
 </body>
 </html>
