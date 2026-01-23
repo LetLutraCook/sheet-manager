@@ -12,11 +12,18 @@
       padding: 20px;
       display: flex;
       gap: 40px;
-      align-items: flex-start;
+      align-items: flex-start; /* Aligns items to the top */
       background-color: #fafafa;
     }
 
-    table { border-collapse: collapse; margin-top: 20px; background: white; width: 100%; }
+    /* Container for table and controls to start at same Y level */
+    .main-layout {
+        display: flex;
+        gap: 40px;
+        align-items: flex-start;
+    }
+
+    table { border-collapse: collapse; background: white; width: 100%; margin-top: 10px; }
     td, th { border: 1px solid #ccc; padding: 10px; text-align: center; }
 
     .editable { cursor: pointer; }
@@ -37,7 +44,6 @@
       background: white;
       cursor: pointer;
       vertical-align: top;
-      transition: background 0.1s;
     }
 
     .top-btn:active { background: #f0f0f0; }
@@ -49,20 +55,12 @@
     .mode-minus { color: #cc4125; }
     .mode-plus { color: #2b7d2b; }
 
-    /* New Message Log Position */
-    #messages {
-      margin-top: 20px;
-      padding: 10px;
-      font-size: 13px;
-      color: #666;
-      background: #eee;
-      border-radius: 6px;
-      white-space: pre-line;
-      min-height: 3.2em;
-      border: 1px solid #ddd;
+    /* Control Panel Alignment */
+    #controls-container { 
+        display: none; 
+        gap: 20px; 
+        padding-top: 70px; /* Aligns keypad with the first row of table data */
     }
-
-    #controls-container { display: none; gap: 20px; margin-top: 140px; }
 
     #keypad, #calc-preview {
       background: #f2f2f2;
@@ -89,7 +87,6 @@
       width: 100%; 
       text-align: center; 
       margin-bottom: 10px;
-      letter-spacing: 1px;
     }
     
     .preview-val { color: #444; font-size: 22px; }
@@ -116,50 +113,80 @@
       justify-content: center;
       align-items: center;
     }
-    #keypad button:active { background: #e0e0e0; }
+
+    /* Loading Spinner Styles */
+    #status-overlay {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 30px;
+        display: none;
+        align-items: center;
+        gap: 10px;
+        z-index: 1000;
+        font-weight: bold;
+    }
+
+    .spinner {
+        animation: spin 1s linear infinite;
+        font-size: 20px;
+    }
+
+    @keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 
 <body onload="loadSheet()">
 
-  <div style="flex: 1;">
-    <button id="loadBtn" class="top-btn"><i class="bi bi-arrow-clockwise"></i></button>
-    <button id="saveBtn" class="top-btn"><i class="bi bi-save"></i></button>
-    <button id="toggleKeypadBtn" class="top-btn"><i class="bi bi-keyboard"></i></button>
-
-    <button id="modeBtn" class="top-btn">
-      <i id="modeIcon" class="bi bi-pencil-square"></i>
-      <span id="modeText" class="mode-replace">Replace</span>
-    </button>
-
-    <table id="sheet"></table>
-    
-    <div id="messages"></div>
+  <div id="status-overlay">
+    <i id="status-icon" class="bi bi-arrow-repeat spinner"></i>
+    <span id="status-text">Processing...</span>
   </div>
 
-  <div id="controls-container">
-    <div id="keypad">
-      <div class="keypad-row">
-        <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
-      </div>
-      <div class="keypad-row">
-        <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
-      </div>
-      <div class="keypad-row">
-        <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
-      </div>
-      <div class="keypad-row">
-        <button data-key="0">0</button>
-        <button data-key="del"><i class="bi bi-backspace"></i></button>
-        <button data-key="enter"><i class="bi bi-check-lg"></i></button>
-      </div>
+  <div class="main-layout">
+    <div style="flex: 1;">
+      <button id="loadBtn" class="top-btn"><i class="bi bi-arrow-clockwise"></i></button>
+      <button id="saveBtn" class="top-btn"><i class="bi bi-save"></i></button>
+      <button id="toggleKeypadBtn" class="top-btn"><i class="bi bi-keyboard"></i></button>
+
+      <button id="modeBtn" class="top-btn">
+        <i id="modeIcon" class="bi bi-pencil-square"></i>
+        <span id="modeText" class="mode-replace">Replace</span>
+      </button>
+
+      <table id="sheet"></table>
     </div>
 
-    <div id="calc-preview">
-      <div id="calc-label" class="preview-label">MODE</div>
-      <div class="preview-val" id="pre-start">0</div>
-      <div class="preview-op" id="pre-input"></div>
-      <div class="preview-result" id="pre-total">0</div>
+    <div id="controls-container">
+      <div id="keypad">
+        <div class="keypad-row">
+          <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
+        </div>
+        <div class="keypad-row">
+          <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
+        </div>
+        <div class="keypad-row">
+          <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
+        </div>
+        <div class="keypad-row">
+          <button data-key="0">0</button>
+          <button data-key="del"><i class="bi bi-backspace"></i></button>
+          <button data-key="enter"><i class="bi bi-check-lg"></i></button>
+        </div>
+      </div>
+
+      <div id="calc-preview">
+        <div id="calc-label" class="preview-label">MODE</div>
+        <div class="preview-val" id="pre-start">0</div>
+        <div id="pre-input" class="preview-op"></div>
+        <div class="preview-result" id="pre-total">0</div>
+      </div>
     </div>
   </div>
 
@@ -172,24 +199,42 @@
     let currentMode = 'replace'; 
     let tempInput = ""; 
 
-    // FAST TOUCH HELPER
     const fastEvent = ("ontouchstart" in window) ? "touchstart" : "mousedown";
 
-    function logMessage(msg) {
-      const box = document.getElementById("messages");
-      box.textContent += `${new Date().toLocaleTimeString()} — ${msg}\n`;
-      let lines = box.textContent.trimEnd().split("\n");
-      if (lines.length > 3) lines = lines.slice(lines.length - 3);
-      box.textContent = lines.join("\n") + "\n";
+    function showStatus(msg, isDone = false) {
+        const overlay = document.getElementById("status-overlay");
+        const text = document.getElementById("status-text");
+        const icon = document.getElementById("status-icon");
+
+        overlay.style.display = "flex";
+        text.textContent = msg;
+
+        if (isDone) {
+            icon.classList.remove("spinner", "bi-arrow-repeat");
+            icon.classList.add("bi-check-circle");
+            setTimeout(() => {
+                overlay.style.display = "none";
+                icon.classList.add("spinner", "bi-arrow-repeat");
+                icon.classList.remove("bi-check-circle");
+            }, 2000);
+        } else {
+            icon.classList.add("spinner", "bi-arrow-repeat");
+            icon.classList.remove("bi-check-circle");
+        }
     }
 
     async function loadSheet() {
-      const res = await fetch(URL);
-      const data = await res.json();
-      renderTable(data);
-      document.querySelectorAll(".top-btn").forEach(b => b.classList.add("enabled"));
-      document.getElementById("controls-container").style.display = "flex";
-      logMessage("sheet loaded");
+      showStatus("Loading Sheet...");
+      try {
+          const res = await fetch(URL);
+          const data = await res.json();
+          renderTable(data);
+          document.querySelectorAll(".top-btn").forEach(b => b.classList.add("enabled"));
+          document.getElementById("controls-container").style.display = "flex";
+          showStatus("Sheet Loaded!", true);
+      } catch (e) {
+          showStatus("Load Error", true);
+      }
     }
 
     function renderTable(data) {
@@ -207,7 +252,6 @@
           } else {
             td.textContent = cell;
             td.classList.add("editable");
-            // FAST TOUCH FOR CELLS
             td.addEventListener(fastEvent, (e) => {
                 if(fastEvent === "touchstart") e.preventDefault();
                 selectCell(td);
@@ -289,7 +333,6 @@
       updateCalcPreview();
     }
 
-    // FAST TOUCH FOR MODE BUTTON
     document.getElementById("modeBtn").addEventListener(fastEvent, (e) => {
       if(fastEvent === "touchstart") e.preventDefault();
       const modes = ['replace', 'minus', 'plus'];
@@ -306,22 +349,32 @@
       }
     });
 
-    // FAST TOUCH FOR OTHER TOP BUTTONS
-    document.getElementById("loadBtn").addEventListener(fastEvent, (e) => { if(fastEvent === "touchstart") e.preventDefault(); loadSheet(); });
+    document.getElementById("loadBtn").addEventListener(fastEvent, (e) => { 
+        if(fastEvent === "touchstart") e.preventDefault(); 
+        loadSheet(); 
+    });
+
     document.getElementById("saveBtn").addEventListener(fastEvent, async (e) => { 
         if(fastEvent === "touchstart") e.preventDefault();
         finalizeCell();
-        const rows = Array.from(document.querySelectorAll("#sheet tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td => td.textContent));
-        await fetch(URL, { method: "POST", body: JSON.stringify(rows) });
-        logMessage("sheet saved");
+        showStatus("Saving Sheet...");
+        const rows = Array.from(document.querySelectorAll("#sheet tr")).map(tr => 
+            Array.from(tr.querySelectorAll("td")).map(td => td.textContent)
+        );
+        try {
+            await fetch(URL, { method: "POST", body: JSON.stringify(rows) });
+            showStatus("Sheet Saved!", true);
+        } catch(e) {
+            showStatus("Save Error", true);
+        }
     });
+
     document.getElementById("toggleKeypadBtn").addEventListener(fastEvent, (e) => {
       if(fastEvent === "touchstart") e.preventDefault();
       keypadEnabled = !keypadEnabled;
       document.getElementById("controls-container").style.display = keypadEnabled ? "flex" : "none";
     });
 
-    // FAST TOUCH FOR KEYPAD
     document.querySelectorAll("#keypad button").forEach(btn => {
       btn.addEventListener(fastEvent, e => {
         e.preventDefault();
