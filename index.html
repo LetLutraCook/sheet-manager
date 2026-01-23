@@ -16,13 +16,12 @@
       background-color: #fafafa;
     }
 
-    table { border-collapse: collapse; margin-top: 20px; background: white; }
-    td, th { border: 1px solid #ccc; padding: 6px 10px; }
+    table { border-collapse: collapse; margin-top: 20px; background: white; width: 100%; }
+    td, th { border: 1px solid #ccc; padding: 10px; text-align: center; }
 
     .editable { cursor: pointer; }
     .selected { background-color: #d0d0d0 !important; }
 
-    /* Icon-only buttons */
     .top-btn {
       width: 60px;
       height: 60px;
@@ -38,24 +37,29 @@
       background: white;
       cursor: pointer;
       vertical-align: top;
+      transition: background 0.1s;
     }
 
+    .top-btn:active { background: #f0f0f0; }
     .top-btn i { font-size: 24px; line-height: 1; }
     .top-btn span { font-size: 8px; font-weight: bold; text-transform: uppercase; margin-top: 3px; }
-
     .top-btn.enabled { opacity: 1; pointer-events: auto; }
 
-    /* Mode specific colors for the button text */
     .mode-replace { color: #007bff; }
     .mode-minus { color: #cc4125; }
     .mode-plus { color: #2b7d2b; }
 
+    /* New Message Log Position */
     #messages {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #444;
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 13px;
+      color: #666;
+      background: #eee;
+      border-radius: 6px;
       white-space: pre-line;
       min-height: 3.2em;
+      border: 1px solid #ddd;
     }
 
     #controls-container { display: none; gap: 20px; margin-top: 140px; }
@@ -70,7 +74,6 @@
       gap: 12px;
     }
 
-    /* Calculation Panel Styling */
     #calc-preview {
       min-width: 140px;
       justify-content: center;
@@ -119,7 +122,7 @@
 
 <body onload="loadSheet()">
 
-  <div>
+  <div style="flex: 1;">
     <button id="loadBtn" class="top-btn"><i class="bi bi-arrow-clockwise"></i></button>
     <button id="saveBtn" class="top-btn"><i class="bi bi-save"></i></button>
     <button id="toggleKeypadBtn" class="top-btn"><i class="bi bi-keyboard"></i></button>
@@ -129,8 +132,9 @@
       <span id="modeText" class="mode-replace">Replace</span>
     </button>
 
-    <div id="messages"></div>
     <table id="sheet"></table>
+    
+    <div id="messages"></div>
   </div>
 
   <div id="controls-container">
@@ -165,8 +169,11 @@
     let selectedCell = null;
     let originalValue = "";
     let keypadEnabled = true;
-    let currentMode = 'replace'; // 'replace', 'minus', 'plus'
+    let currentMode = 'replace'; 
     let tempInput = ""; 
+
+    // FAST TOUCH HELPER
+    const fastEvent = ("ontouchstart" in window) ? "touchstart" : "mousedown";
 
     function logMessage(msg) {
       const box = document.getElementById("messages");
@@ -200,7 +207,11 @@
           } else {
             td.textContent = cell;
             td.classList.add("editable");
-            td.addEventListener("click", () => selectCell(td));
+            // FAST TOUCH FOR CELLS
+            td.addEventListener(fastEvent, (e) => {
+                if(fastEvent === "touchstart") e.preventDefault();
+                selectCell(td);
+            });
           }
           tr.appendChild(td);
         });
@@ -233,18 +244,11 @@
 
     function finalizeCell() {
       if (!selectedCell) return;
-      
       const start = Number(originalValue) || 0;
       const input = Number(tempInput) || 0;
-
-      if (currentMode === 'minus' && tempInput !== "") {
-          selectedCell.textContent = start - input;
-      } else if (currentMode === 'plus' && tempInput !== "") {
-          selectedCell.textContent = start + input;
-      }
-
+      if (currentMode === 'minus' && tempInput !== "") selectedCell.textContent = start - input;
+      else if (currentMode === 'plus' && tempInput !== "") selectedCell.textContent = start + input;
       if (selectedCell.textContent.trim() === "") selectedCell.textContent = "0";
-
       selectedCell.classList.remove("selected");
       selectedCell = null;
       tempInput = "";
@@ -260,7 +264,6 @@
         const input = Number(tempInput) || 0;
         const symbol = currentMode === 'minus' ? "-" : "+";
         const total = currentMode === 'minus' ? (start - input) : (start + input);
-        
         document.getElementById("calc-label").textContent = currentMode.toUpperCase() + " MODE";
         document.getElementById("pre-start").textContent = start;
         document.getElementById("pre-input").innerHTML = `<span style="color:${currentMode==='minus'?'#cc4125':'#2b7d2b'}">${symbol}</span> ${input}`;
@@ -286,49 +289,49 @@
       updateCalcPreview();
     }
 
-    document.getElementById("modeBtn").addEventListener("click", () => {
+    // FAST TOUCH FOR MODE BUTTON
+    document.getElementById("modeBtn").addEventListener(fastEvent, (e) => {
+      if(fastEvent === "touchstart") e.preventDefault();
       const modes = ['replace', 'minus', 'plus'];
       const icons = ['bi-pencil-square', 'bi-dash-square', 'bi-plus-square'];
       let idx = (modes.indexOf(currentMode) + 1) % modes.length;
-      
       currentMode = modes[idx];
       const textSpan = document.getElementById("modeText");
       textSpan.textContent = currentMode;
       textSpan.className = "mode-" + currentMode;
       document.getElementById("modeIcon").className = "bi " + icons[idx];
-
       if (selectedCell) {
         if (currentMode === 'replace') selectedCell.textContent = originalValue;
         updateCalcPreview();
       }
     });
 
-    const inputEvent = ("ontouchstart" in window) ? "touchstart" : "click";
+    // FAST TOUCH FOR OTHER TOP BUTTONS
+    document.getElementById("loadBtn").addEventListener(fastEvent, (e) => { if(fastEvent === "touchstart") e.preventDefault(); loadSheet(); });
+    document.getElementById("saveBtn").addEventListener(fastEvent, async (e) => { 
+        if(fastEvent === "touchstart") e.preventDefault();
+        finalizeCell();
+        const rows = Array.from(document.querySelectorAll("#sheet tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td => td.textContent));
+        await fetch(URL, { method: "POST", body: JSON.stringify(rows) });
+        logMessage("sheet saved");
+    });
+    document.getElementById("toggleKeypadBtn").addEventListener(fastEvent, (e) => {
+      if(fastEvent === "touchstart") e.preventDefault();
+      keypadEnabled = !keypadEnabled;
+      document.getElementById("controls-container").style.display = keypadEnabled ? "flex" : "none";
+    });
+
+    // FAST TOUCH FOR KEYPAD
     document.querySelectorAll("#keypad button").forEach(btn => {
-      btn.addEventListener(inputEvent, e => {
+      btn.addEventListener(fastEvent, e => {
         e.preventDefault();
         pressKey(btn.dataset.key);
       });
     });
 
-    document.addEventListener("click", e => {
+    document.addEventListener("mousedown", e => {
       if (!selectedCell || e.target.closest("#controls-container") || e.target.closest(".top-btn") || e.target === selectedCell) return;
       finalizeCell();
-    });
-
-    document.getElementById("loadBtn").addEventListener("click", loadSheet);
-    document.getElementById("saveBtn").addEventListener("click", async () => {
-      finalizeCell();
-      const rows = Array.from(document.querySelectorAll("#sheet tr")).map(tr => 
-        Array.from(tr.querySelectorAll("td")).map(td => td.textContent)
-      );
-      await fetch(URL, { method: "POST", body: JSON.stringify(rows) });
-      logMessage("sheet saved");
-    });
-
-    document.getElementById("toggleKeypadBtn").addEventListener("click", () => {
-      keypadEnabled = !keypadEnabled;
-      document.getElementById("controls-container").style.display = keypadEnabled ? "flex" : "none";
     });
   </script>
 </body>
