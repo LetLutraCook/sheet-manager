@@ -12,11 +12,11 @@
       padding: 20px;
       display: flex;
       gap: 40px;
-      align-items: flex-start; /* Aligns items to the top */
+      align-items: flex-start;
       background-color: #fafafa;
+      margin: 0;
     }
 
-    /* Container for table and controls to start at same Y level */
     .main-layout {
         display: flex;
         gap: 40px;
@@ -43,7 +43,6 @@
       border: 1px solid #ccc;
       background: white;
       cursor: pointer;
-      vertical-align: top;
     }
 
     .top-btn:active { background: #f0f0f0; }
@@ -55,11 +54,10 @@
     .mode-minus { color: #cc4125; }
     .mode-plus { color: #2b7d2b; }
 
-    /* Control Panel Alignment */
     #controls-container { 
         display: none; 
         gap: 20px; 
-        padding-top: 70px; /* Aligns keypad with the first row of table data */
+        padding-top: 70px; 
     }
 
     #keypad, #calc-preview {
@@ -80,64 +78,56 @@
       visibility: hidden;
     }
 
-    .preview-label { 
-      font-family: Arial, sans-serif; 
-      font-size: 9px; 
-      color: #666; 
-      width: 100%; 
-      text-align: center; 
-      margin-bottom: 10px;
-    }
-    
+    .preview-label { font-family: Arial, sans-serif; font-size: 9px; color: #666; width: 100%; text-align: center; margin-bottom: 10px; }
     .preview-val { color: #444; font-size: 22px; }
-    .preview-op { 
-      font-size: 22px; 
-      border-bottom: 2px solid #bbb; 
-      width: 100%; 
-      text-align: right;
-      padding-bottom: 5px;
-    }
+    .preview-op { font-size: 22px; border-bottom: 2px solid #bbb; width: 100%; text-align: right; padding-bottom: 5px; }
     .preview-result { font-weight: bold; font-size: 26px; color: #000; margin-top: 5px; }
 
-    .keypad-row { display: flex; gap: 12px; }
-
     #keypad button {
-      width: 60px;
-      height: 60px;
-      background: #ffffff;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 20px;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      width: 60px; height: 60px; background: white; border: 1px solid #ccc;
+      border-radius: 10px; font-size: 20px; cursor: pointer;
+      display: flex; justify-content: center; align-items: center;
     }
 
-    /* Loading Spinner Styles */
+    /* FULL SCREEN SQUARED OVERLAY */
     #status-overlay {
         position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0,0,0,0.8);
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(0, 0, 0, 0.6); /* Transparent Dark Overlay */
         color: white;
-        padding: 12px 24px;
-        border-radius: 30px;
-        display: none;
+        display: none; /* Flex via JS */
+        flex-direction: column;
+        justify-content: center;
         align-items: center;
-        gap: 10px;
-        z-index: 1000;
-        font-weight: bold;
+        gap: 15px;
+        z-index: 9999;
     }
 
+    /* CENTERED SPINNER LOGIC */
     .spinner {
+        display: inline-block;
         animation: spin 1s linear infinite;
-        font-size: 20px;
+        font-size: 40px;
+        line-height: 1;
+        width: 40px;
+        height: 40px;
+        text-align: center;
     }
 
     @keyframes spin {
-        100% { transform: rotate(360deg); }
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    #status-box {
+        background: #000; /* Pure black square */
+        padding: 30px 50px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        min-width: 180px;
     }
   </style>
 </head>
@@ -145,15 +135,17 @@
 <body onload="loadSheet()">
 
   <div id="status-overlay">
-    <i id="status-icon" class="bi bi-arrow-repeat spinner"></i>
-    <span id="status-text">Processing...</span>
+    <div id="status-box">
+        <i id="status-icon" class="bi bi-arrow-repeat spinner"></i>
+        <span id="status-text" style="text-transform: uppercase; font-size: 14px; letter-spacing: 1px;">Processing...</span>
+    </div>
   </div>
 
   <div class="main-layout">
     <div style="flex: 1;">
-      <button id="loadBtn" class="top-btn"><i class="bi bi-arrow-clockwise"></i></button>
-      <button id="saveBtn" class="top-btn"><i class="bi bi-save"></i></button>
-      <button id="toggleKeypadBtn" class="top-btn"><i class="bi bi-keyboard"></i></button>
+      <button id="loadBtn" class="top-btn"><i class="bi bi-arrow-clockwise"></i><span>Load</span></button>
+      <button id="saveBtn" class="top-btn"><i class="bi bi-save"></i><span>Save</span></button>
+      <button id="toggleKeypadBtn" class="top-btn"><i class="bi bi-keyboard"></i><span>Keys</span></button>
 
       <button id="modeBtn" class="top-btn">
         <i id="modeIcon" class="bi bi-pencil-square"></i>
@@ -211,30 +203,25 @@
 
         if (isDone) {
             icon.classList.remove("spinner", "bi-arrow-repeat");
-            icon.classList.add("bi-check-circle");
+            icon.classList.add("bi-check-lg");
             setTimeout(() => {
                 overlay.style.display = "none";
                 icon.classList.add("spinner", "bi-arrow-repeat");
-                icon.classList.remove("bi-check-circle");
-            }, 2000);
-        } else {
-            icon.classList.add("spinner", "bi-arrow-repeat");
-            icon.classList.remove("bi-check-circle");
+                icon.classList.remove("bi-check-lg");
+            }, 1200);
         }
     }
 
     async function loadSheet() {
-      showStatus("Loading Sheet...");
+      showStatus("Loading...");
       try {
           const res = await fetch(URL);
           const data = await res.json();
           renderTable(data);
           document.querySelectorAll(".top-btn").forEach(b => b.classList.add("enabled"));
           document.getElementById("controls-container").style.display = "flex";
-          showStatus("Sheet Loaded!", true);
-      } catch (e) {
-          showStatus("Load Error", true);
-      }
+          showStatus("Loaded", true);
+      } catch (e) { showStatus("Error", true); }
     }
 
     function renderTable(data) {
@@ -350,23 +337,20 @@
     });
 
     document.getElementById("loadBtn").addEventListener(fastEvent, (e) => { 
-        if(fastEvent === "touchstart") e.preventDefault(); 
-        loadSheet(); 
+        if(fastEvent === "touchstart") e.preventDefault(); loadSheet(); 
     });
 
     document.getElementById("saveBtn").addEventListener(fastEvent, async (e) => { 
         if(fastEvent === "touchstart") e.preventDefault();
         finalizeCell();
-        showStatus("Saving Sheet...");
+        showStatus("Saving...");
         const rows = Array.from(document.querySelectorAll("#sheet tr")).map(tr => 
             Array.from(tr.querySelectorAll("td")).map(td => td.textContent)
         );
         try {
             await fetch(URL, { method: "POST", body: JSON.stringify(rows) });
-            showStatus("Sheet Saved!", true);
-        } catch(e) {
-            showStatus("Save Error", true);
-        }
+            showStatus("Saved", true);
+        } catch(e) { showStatus("Error", true); }
     });
 
     document.getElementById("toggleKeypadBtn").addEventListener(fastEvent, (e) => {
