@@ -13,47 +13,49 @@
       display: flex;
       gap: 40px;
       align-items: flex-start;
+      background-color: #fafafa;
     }
 
-    table { border-collapse: collapse; margin-top: 20px; }
+    table { border-collapse: collapse; margin-top: 20px; background: white; }
     td, th { border: 1px solid #ccc; padding: 6px 10px; }
 
     .editable { cursor: pointer; }
-
-    .selected {
-      background-color: #d0d0d0 !important;
-    }
+    .selected { background-color: #d0d0d0 !important; }
 
     /* Icon-only buttons */
     .top-btn {
       width: 60px;
       height: 60px;
-      font-size: 28px;
       border-radius: 10px;
       opacity: 0.4;
       pointer-events: none;
       display: inline-flex;
+      flex-direction: column; /* Stack icon and text */
       justify-content: center;
       align-items: center;
       margin-right: 10px;
       border: 1px solid #ccc;
       background: white;
       cursor: pointer;
+      vertical-align: top;
+    }
+
+    .top-btn i {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .top-btn span {
+      font-size: 9px; /* Smaller text */
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-top: 2px;
     }
 
     .top-btn.enabled {
       opacity: 1;
       pointer-events: auto;
     }
-
-    /* Mode button specific style */
-    #modeBtn {
-        font-size: 14px;
-        font-weight: bold;
-        flex-direction: column;
-        line-height: 1;
-    }
-    #modeBtn i { font-size: 20px; margin-bottom: 2px; }
 
     #messages {
       margin-top: 15px;
@@ -65,37 +67,51 @@
 
     /* Keypad & Preview Container */
     #controls-container {
-        display: none; /* Hidden until load */
-        flex-direction: row;
-        gap: 20px;
-        margin-top: 140px;
+      display: none; 
+      gap: 20px;
+      margin-top: 140px;
     }
 
     #keypad, #minus-preview {
       background: #f2f2f2;
       padding: 20px;
       border-radius: 12px;
+      border: 1px solid #ccc;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
 
-    /* Minus Preview Panel */
+    /* Calculation Panel Styling */
     #minus-preview {
-        min-width: 120px;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        visibility: hidden; /* Only show when in Minus mode */
+      min-width: 140px;
+      justify-content: center;
+      align-items: flex-end; /* Align numbers like a receipt */
+      font-family: 'Courier New', Courier, monospace; /* Digital/Math look */
+      visibility: hidden;
     }
-    .preview-val { color: #888; font-size: 18px; }
-    .preview-minus { color: #cc4125; border-bottom: 2px solid #ccc; margin-bottom: 5px; }
-    .preview-result { font-weight: bold; }
 
-    .keypad-row {
-      display: flex;
-      gap: 12px;
+    .preview-label { 
+      font-family: Arial, sans-serif; 
+      font-size: 10px; 
+      color: #888; 
+      width: 100%; 
+      text-align: center; 
+      margin-bottom: 10px;
     }
+    
+    .preview-val { color: #444; font-size: 22px; }
+    .preview-minus { 
+      color: #cc4125; 
+      font-size: 22px; 
+      border-bottom: 2px solid #bbb; 
+      width: 100%; 
+      text-align: right;
+      padding-bottom: 5px;
+    }
+    .preview-result { font-weight: bold; font-size: 26px; color: #000; margin-top: 5px; }
+
+    .keypad-row { display: flex; gap: 12px; }
 
     #keypad button {
       width: 60px;
@@ -104,16 +120,13 @@
       border: 1px solid #ccc;
       border-radius: 10px;
       font-size: 20px;
-      color: black;
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
     }
 
-    #keypad button:active {
-      background: #e0e0e0;
-    }
+    #keypad button:active { background: #e0e0e0; }
   </style>
 </head>
 
@@ -133,43 +146,43 @@
     </button>
 
     <button id="modeBtn" class="top-btn">
-        <i class="bi bi-pencil-square"></i>
-        <span>REPLACE</span>
+      <i id="modeIcon" class="bi bi-pencil-square"></i>
+      <span id="modeText">Replace</span>
     </button>
 
     <div id="messages"></div>
-
     <table id="sheet"></table>
   </div>
 
   <div id="controls-container">
     <div id="keypad">
-        <div class="keypad-row">
-          <button data-key="1">1</button>
-          <button data-key="2">2</button>
-          <button data-key="3">3</button>
-        </div>
-        <div class="keypad-row">
-          <button data-key="4">4</button>
-          <button data-key="5">5</button>
-          <button data-key="6">6</button>
-        </div>
-        <div class="keypad-row">
-          <button data-key="7">7</button>
-          <button data-key="8">8</button>
-          <button data-key="9">9</button>
-        </div>
-        <div class="keypad-row">
-          <button data-key="0">0</button>
-          <button data-key="del"><i class="bi bi-backspace"></i></button>
-          <button data-key="enter"><i class="bi bi-check-lg"></i></button>
-        </div>
+      <div class="keypad-row">
+        <button data-key="1">1</button>
+        <button data-key="2">2</button>
+        <button data-key="3">3</button>
+      </div>
+      <div class="keypad-row">
+        <button data-key="4">4</button>
+        <button data-key="5">5</button>
+        <button data-key="6">6</button>
+      </div>
+      <div class="keypad-row">
+        <button data-key="7">7</button>
+        <button data-key="8">8</button>
+        <button data-key="9">9</button>
+      </div>
+      <div class="keypad-row">
+        <button data-key="0">0</button>
+        <button data-key="del"><i class="bi bi-backspace"></i></button>
+        <button data-key="enter"><i class="bi bi-check-lg"></i></button>
+      </div>
     </div>
 
     <div id="minus-preview">
-        <div class="preview-val" id="pre-start">0</div>
-        <div class="preview-minus" id="pre-input">- 0</div>
-        <div class="preview-result" id="pre-total">0</div>
+      <div class="preview-label">SUBTRACTION MODE</div>
+      <div class="preview-val" id="pre-start">0</div>
+      <div class="preview-minus" id="pre-input">- 0</div>
+      <div class="preview-result" id="pre-total">0</div>
     </div>
   </div>
 
@@ -179,15 +192,8 @@
     let selectedCell = null;
     let originalValue = "";
     let keypadEnabled = true;
-    let initialPaddingDone = false;
-    
-    // Mode Logic: 'replace' or 'minus'
     let currentMode = 'replace'; 
     let minusInput = ""; 
-
-    const toggleBtn = document.getElementById("toggleKeypadBtn");
-    const modeBtn = document.getElementById("modeBtn");
-    const previewDiv = document.getElementById("minus-preview");
 
     function logMessage(msg) {
       const box = document.getElementById("messages");
@@ -198,24 +204,14 @@
       box.textContent = lines.join("\n") + "\n";
     }
 
-    function enableButtons() {
-      document.getElementById("loadBtn").classList.add("enabled");
-      document.getElementById("saveBtn").classList.add("enabled");
-      toggleBtn.classList.add("enabled");
-      modeBtn.classList.add("enabled");
-      document.getElementById("controls-container").style.display = "flex";
-    }
-
     async function loadSheet() {
       const res = await fetch(URL);
       const data = await res.json();
       renderTable(data);
-      enableButtons();
+      
+      document.querySelectorAll(".top-btn").forEach(b => b.classList.add("enabled"));
+      document.getElementById("controls-container").style.display = "flex";
       logMessage("sheet loaded");
-      if (!initialPaddingDone) {
-        document.getElementById("messages").textContent += "\n\n";
-        initialPaddingDone = true;
-      }
     }
 
     function renderTable(data) {
@@ -229,7 +225,7 @@
           if (r === 0 || c === 0) {
             td.textContent = cell;
           } else if (c === 4 && r !== 0) {
-            updateComputedCell(td, row[1], row[3]);
+            updateRowMath(td, row[1], row[3]);
           } else {
             td.textContent = cell;
             td.classList.add("editable");
@@ -241,18 +237,16 @@
       });
     }
 
-    function updateComputedCell(td, bVal, dVal) {
-        const val = Number(bVal) - Number(dVal);
-        td.textContent = val;
-        td.style.background = val < 0 ? "#cc4125" : "";
+    function updateRowMath(td, bVal, dVal) {
+      const val = Number(bVal) - Number(dVal);
+      td.textContent = val;
+      td.style.background = val < 0 ? "#cc4125" : "";
     }
 
     function updateAllE() {
       const table = document.getElementById("sheet");
       for (let r = 1; r < table.rows.length; r++) {
-        const b = table.rows[r].cells[1].textContent;
-        const d = table.rows[r].cells[3].textContent;
-        updateComputedCell(table.rows[r].cells[4], b, d);
+        updateRowMath(table.rows[r].cells[4], table.rows[r].cells[1].textContent, table.rows[r].cells[3].textContent);
       }
     }
 
@@ -260,28 +254,22 @@
       finalizeCell();
       selectedCell = td;
       originalValue = td.textContent;
-      minusInput = ""; // reset math for new selection
+      minusInput = ""; 
       td.classList.add("selected");
 
-      if (currentMode === 'replace') {
-          if (td.textContent === "0") td.textContent = "";
-      } else {
-          updateMinusPreview();
+      if (currentMode === 'replace' && td.textContent === "0") {
+          td.textContent = "";
       }
+      updateMinusPreview();
     }
 
     function finalizeCell() {
       if (!selectedCell) return;
       
       if (currentMode === 'minus' && minusInput !== "") {
-          const start = Number(originalValue) || 0;
-          const sub = Number(minusInput) || 0;
-          selectedCell.textContent = start - sub;
+          selectedCell.textContent = Number(originalValue) - Number(minusInput);
       }
-
-      if (selectedCell.textContent.trim() === "") {
-        selectedCell.textContent = "0";
-      }
+      if (selectedCell.textContent.trim() === "") selectedCell.textContent = "0";
 
       selectedCell.classList.remove("selected");
       selectedCell = null;
@@ -291,16 +279,17 @@
     }
 
     function updateMinusPreview() {
-        if (currentMode === 'minus' && selectedCell) {
-            previewDiv.style.visibility = "visible";
-            const start = Number(originalValue) || 0;
-            const input = Number(minusInput) || 0;
-            document.getElementById("pre-start").textContent = start;
-            document.getElementById("pre-input").textContent = "- " + input;
-            document.getElementById("pre-total").textContent = "= " + (start - input);
-        } else {
-            previewDiv.style.visibility = "hidden";
-        }
+      const preview = document.getElementById("minus-preview");
+      if (currentMode === 'minus' && selectedCell) {
+        preview.style.visibility = "visible";
+        const start = Number(originalValue) || 0;
+        const input = Number(minusInput) || 0;
+        document.getElementById("pre-start").textContent = start;
+        document.getElementById("pre-input").textContent = "- " + input;
+        document.getElementById("pre-total").textContent = (start - input);
+      } else {
+        preview.style.visibility = "hidden";
+      }
     }
 
     function pressKey(key) {
@@ -308,60 +297,32 @@
 
       if (key === "del") {
         if (currentMode === 'replace') {
-            selectedCell.textContent = selectedCell.textContent.slice(0, -1);
+          selectedCell.textContent = selectedCell.textContent.slice(0, -1);
         } else {
-            minusInput = minusInput.slice(0, -1);
+          minusInput = minusInput.slice(0, -1);
         }
-        updateAllE();
-        updateMinusPreview();
-        return;
-      }
-
-      if (key === "enter") {
+      } else if (key === "enter") {
         finalizeCell();
         return;
-      }
-
-      if (currentMode === 'replace') {
-          selectedCell.textContent += key;
       } else {
+        if (currentMode === 'replace') {
+          selectedCell.textContent += key;
+        } else {
           minusInput += key;
+        }
       }
-      
       updateAllE();
       updateMinusPreview();
     }
 
-    async function saveSheet() {
-      finalizeCell();
-      const rows = [];
-      const trs = document.querySelectorAll("#sheet tr");
-      trs.forEach((tr, r) => {
-        rows[r] = Array.from(tr.querySelectorAll("td")).map(td => td.textContent);
-      });
-
-      await fetch(URL, { method: "POST", body: JSON.stringify(rows) });
-      logMessage("sheet saved");
-    }
-
-    // Toggle Replace vs Minus Mode
-    modeBtn.addEventListener("click", () => {
-        if (currentMode === 'replace') {
-            currentMode = 'minus';
-            modeBtn.querySelector("span").textContent = "MINUS";
-            modeBtn.querySelector("i").className = "bi bi-dash-square";
-        } else {
-            currentMode = 'replace';
-            modeBtn.querySelector("span").textContent = "REPLACE";
-            modeBtn.querySelector("i").className = "bi bi-pencil-square";
-        }
-        // If a cell is already selected, refresh the view
-        if (selectedCell) {
-            if (currentMode === 'replace') {
-                selectedCell.textContent = originalValue; // reset if switching back
-            }
-            updateMinusPreview();
-        }
+    document.getElementById("modeBtn").addEventListener("click", () => {
+      currentMode = (currentMode === 'replace') ? 'minus' : 'replace';
+      document.getElementById("modeText").textContent = currentMode;
+      document.getElementById("modeIcon").className = currentMode === 'replace' ? "bi bi-pencil-square" : "bi bi-dash-square";
+      if (selectedCell) {
+        if (currentMode === 'replace') selectedCell.textContent = originalValue;
+        updateMinusPreview();
+      }
     });
 
     const inputEvent = ("ontouchstart" in window) ? "touchstart" : "click";
@@ -373,14 +334,21 @@
     });
 
     document.addEventListener("click", e => {
-      if (!selectedCell) return;
-      if (e.target.closest("#controls-container") || e.target.closest(".top-btn") || e.target === selectedCell) return;
+      if (!selectedCell || e.target.closest("#controls-container") || e.target.closest(".top-btn") || e.target === selectedCell) return;
       finalizeCell();
     });
 
     document.getElementById("loadBtn").addEventListener("click", loadSheet);
-    document.getElementById("saveBtn").addEventListener("click", saveSheet);
-    toggleBtn.addEventListener("click", () => {
+    document.getElementById("saveBtn").addEventListener("click", async () => {
+      finalizeCell();
+      const rows = Array.from(document.querySelectorAll("#sheet tr")).map(tr => 
+        Array.from(tr.querySelectorAll("td")).map(td => td.textContent)
+      );
+      await fetch(URL, { method: "POST", body: JSON.stringify(rows) });
+      logMessage("sheet saved");
+    });
+
+    document.getElementById("toggleKeypadBtn").addEventListener("click", () => {
       keypadEnabled = !keypadEnabled;
       document.getElementById("controls-container").style.display = keypadEnabled ? "flex" : "none";
     });
